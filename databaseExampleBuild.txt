@@ -1,0 +1,44 @@
+CREATE TABLE Play(
+  Id text PRIMARY KEY,
+  PlayerId text,
+  MapId text,
+  PlayLength REAL,
+  TimeSubmitted text
+)
+
+INSERT INTO Play (Id, playerid,mapid,playlength,timesubmitted)
+VALUES
+        ('e64b21cc-978f-4df7-b0b1-f76e57c5179a'	,'8e4a8c7c-f42e-4f00-a41a-03d76391e8ca'	,'pk_pylons',20.0,'2025-03-07 02:33:36.5719381'),
+        ('bd85e66f-1918-4ebb-875f-a97992dd6380'	,'8e4a8c7c-f42e-4f00-a41a-03d76391e8ca'	,'pk_pylons',30.0,'2025-03-07 02:33:42.3168591'),
+        ('f27ccfcd-36bd-4072-ae1d-82ae043e4886'	,'8e4a8c7c-f42e-4f00-a41a-03d76391e8ca'	,'pk_pylons',40.0,'2025-03-07 02:33:46.570156'),
+        ('3ddd5ad2-0bae-4752-b75b-aa386543d415'	,'8e4a8c7c-f42e-4f00-a41a-03d76391e8ca'	,'pk_pylons',50.0,'2025-03-07 02:33:48.917266'),
+        ('5a62c31b-2d31-49ce-8742-dbeb62545283'	,'8e4a8c7c-f42e-4f00-a41a-03d76391e8ca'	,'pk_pylons',5.0, '2025-03-07 03:25:43.2257978'),
+        ('ed658ff7-5787-44cb-ada9-960a57a09434'	,'8e4a8c7c-f42e-4f00-a41a-03d76391e8ca'	,'pk_pylons',30.0,'2025-03-07 03:25:57.1922953');
+
+SELECT Play.*
+FROM
+(
+    SELECT      LIMIT (10)
+                playerId
+    FROM        Play
+    GROUP BY    playerId    --> use this instead of distinct
+)   AS          distinctIds
+
+LEFT JOIN
+(
+    SELECT  LIMIT (1) *       --> fetch only one result matching personID
+    FROM    Play
+    WHERE   Play.playerId = distinctIds.personID
+)   AS      personDetails
+
+//query
+WITH RankedPlays AS (
+    SELECT *, 
+           ROW_NUMBER() OVER (PARTITION BY playerId ORDER BY PlayLength ASC) AS rank
+    FROM Play
+    WHERE playerId IN (
+        SELECT playerId FROM Play GROUP BY playerId LIMIT 100
+    )
+)
+SELECT * FROM RankedPlays WHERE rank = 1;
+
