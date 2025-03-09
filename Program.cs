@@ -123,7 +123,7 @@ app.MapPost("/login", async (PlayerLogin loginAttempt, PlayerContext db, HttpCon
                CookieAuthenticationDefaults.AuthenticationScheme,
                new ClaimsPrincipal(claimsIdentity),
                authProperties);
-        return Results.Ok(new { Message = "Login successful!" });
+        return Results.Ok();
     }
 })
 .WithName("login")
@@ -152,13 +152,14 @@ app.MapGet("/player", async (HttpContext httpContext, PlayerContext db) =>
     }
     else
     {
-        return Results.Ok(new {playerResult.Id,playerResult.Username,playerResult.LastLoggedIn,playerResult.AccountCreated});
+        return Results.Ok(new { playerResult.Id, playerResult.Username, playerResult.LastLoggedIn, playerResult.AccountCreated });
     }
 
 
 })
 .WithName("GetPlayer")
-.WithOpenApi();
+.WithOpenApi()
+.Produces<StrippedPlayer>();
 
 app.MapPost("/play", async (string mapId, float timeLength, HttpContext httpContext, PlayerContext db) =>
 {
@@ -181,7 +182,7 @@ app.MapPost("/play", async (string mapId, float timeLength, HttpContext httpCont
         var newPlay = new Play(player.Id, mapId, timeLength);
         player.Plays.Add(newPlay);
         await db.SaveChangesAsync();
-        return Results.Ok("play added");
+        return Results.Ok();
     }
 
 
@@ -219,7 +220,8 @@ app.MapGet("/plays", async (HttpContext httpContext, PlayerContext db, string pl
 
 })
 .WithName("GetPlays")
-.WithOpenApi();
+.WithOpenApi()
+.Produces<List<Play>>();
 
 app.MapGet("/map", async (string mapId, PlayerContext db) =>
 {
@@ -230,7 +232,7 @@ app.MapGet("/map", async (string mapId, PlayerContext db) =>
     }
     else
     {
-        string sqlQuery =@"
+        string sqlQuery = @"
             WITH RankedPlays AS (
                 SELECT *,
                     ROW_NUMBER() OVER (PARTITION BY playerId ORDER BY PlayLength ASC) AS rank
@@ -243,16 +245,18 @@ app.MapGet("/map", async (string mapId, PlayerContext db) =>
             ORDER BY PlayLength ASC
             LIMIT 100;
         ";
-        var top100 = db.Plays.FromSqlRaw(string.Format(sqlQuery,map.Id)).AsNoTracking();
+        var top100 = db.Plays.FromSqlRaw(string.Format(sqlQuery, map.Id)).AsNoTracking();
         return Results.Ok(new { map.Id, map.AuthorTime, map.SPlusTime, map.STime, map.ATime, map.BTime, top100 });
     }
 })
 .WithName("GetMap")
-.WithOpenApi();
+.WithOpenApi()
+.Produces<Map>();
 
-app.MapGet("/leaderboard", async (string mapId,int startIndex,int endIndex ,PlayerContext db) =>
+app.MapGet("/leaderboard", async (string mapId, int startIndex, int endIndex, PlayerContext db) =>
 {
-    if(startIndex>endIndex){
+    if (startIndex > endIndex)
+    {
         return Results.BadRequest("Start index is lower than end index");
     }
     var map = await db.Maps.FirstOrDefaultAsync(p => p.Id == mapId);
@@ -275,14 +279,16 @@ app.MapGet("/leaderboard", async (string mapId,int startIndex,int endIndex ,Play
             ORDER BY PlayLength ASC
             LIMIT {1} OFFSET {2};
         ";
-        var top100 = db.Plays.FromSqlRaw(string.Format(sqlQuery,map.Id,(endIndex-startIndex),startIndex)).AsNoTracking();
-        return Results.Ok(new { map.Id, map.AuthorTime, map.SPlusTime, map.STime, map.ATime, map.BTime, top100 });
+        var leaderboardRange = db.Plays.FromSqlRaw(string.Format(sqlQuery, map.Id, (endIndex - startIndex), startIndex)).AsNoTracking();
+        return Results.Ok(new { leaderboardRange });
     }
-})
-.WithName("GetLeaderboardByIndex")
-.WithOpenApi();
 
-app.MapGet("/maps", async (PlayerContext db) =>
+}).WithName("GetLeaderboardByIndex")
+.WithOpenApi()
+.Produces<List<Play>>();
+
+app.MapGet("/maps",
+async (PlayerContext db) =>
 {
     var maps = await Task.FromResult(db.Maps.Select(map => new { map.Id, map.AuthorTime, map.SPlusTime, map.STime, map.ATime, map.BTime }).ToArray());
     if (maps.Length == 0)
@@ -295,6 +301,7 @@ app.MapGet("/maps", async (PlayerContext db) =>
     }
 })
 .WithName("GetMaps")
-.WithOpenApi();
+.WithOpenApi()
+.Produces<List<StrippedMap>>();
 
 app.Run();
