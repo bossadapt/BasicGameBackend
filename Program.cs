@@ -35,7 +35,11 @@ app.UseCookiePolicy(cookiePolicyOptions);
 app.UseAuthentication();
 app.UseAuthorization();
 
-
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<PlayerContext>();
+    db.Database.Migrate();
+}
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
