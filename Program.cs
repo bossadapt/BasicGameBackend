@@ -14,7 +14,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<PlayerContext>(options =>
     options.UseSqlite("Data Source=players.db"));
-//AUTH 
+//AUTH
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
     {
@@ -24,7 +24,17 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
     });
 builder.Services.AddAuthorization();
 
+// log to console in prod
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole();
+builder.Logging.AddDebug();
+builder.Logging.SetMinimumLevel(LogLevel.Debug);
+
 var app = builder.Build();
+
+app.UseSwagger();
+app.UseSwaggerUI();
+
 //More auth
 var cookiePolicyOptions = new CookiePolicyOptions
 {
@@ -150,6 +160,7 @@ app.MapGet("/player", async (HttpContext httpContext, PlayerContext db) =>
 .WithName("GetPlayer")
 .WithOpenApi()
 .Produces<StrippedPlayer>();
+
 app.MapPost("/play", async (string mapId, float timeLength, HttpContext httpContext, PlayerContext db) =>
 {
     if (httpContext.User.Identity == null || !httpContext.User.Identity.IsAuthenticated)
@@ -223,12 +234,12 @@ app.MapGet("/map", async (string mapId, PlayerContext db) =>
     {
         string sqlQuery = @"
             WITH RankedPlays AS (
-                SELECT *, 
+                SELECT *,
                     ROW_NUMBER() OVER (PARTITION BY playerId ORDER BY PlayLength ASC) AS rank
                 FROM Plays
                 WHERE mapId = '{0}'
             )
-            SELECT * 
+            SELECT *
             FROM RankedPlays
             WHERE rank = 1
             ORDER BY PlayLength ASC
@@ -241,6 +252,7 @@ app.MapGet("/map", async (string mapId, PlayerContext db) =>
 .WithName("GetMap")
 .WithOpenApi()
 .Produces<Map>();
+
 app.MapGet("/leaderboard", async (string mapId, int startIndex, int endIndex, PlayerContext db) =>
 {
     if (startIndex > endIndex)
@@ -256,12 +268,12 @@ app.MapGet("/leaderboard", async (string mapId, int startIndex, int endIndex, Pl
     {
         var sqlQuery = @"
             WITH RankedPlays AS (
-                SELECT *, 
+                SELECT *,
                     ROW_NUMBER() OVER (PARTITION BY playerId ORDER BY PlayLength ASC) AS rank
                 FROM Plays
                 WHERE mapId = '{0}'
             )
-            SELECT * 
+            SELECT *
             FROM RankedPlays
             WHERE rank = 1
             ORDER BY PlayLength ASC
@@ -270,6 +282,7 @@ app.MapGet("/leaderboard", async (string mapId, int startIndex, int endIndex, Pl
         var leaderboardRange = db.Plays.FromSqlRaw(string.Format(sqlQuery, map.Id, (endIndex - startIndex), startIndex)).AsNoTracking();
         return Results.Ok(new { leaderboardRange });
     }
+
 }).WithName("GetLeaderboardByIndex")
 .WithOpenApi()
 .Produces<List<Play>>();
@@ -290,7 +303,5 @@ async (PlayerContext db) =>
 .WithName("GetMaps")
 .WithOpenApi()
 .Produces<List<StrippedMap>>();
-
-
 
 app.Run();
