@@ -224,7 +224,7 @@ app.MapGet("/map", async (string mapId, PlayerContext db) =>
                 SELECT *, 
                     ROW_NUMBER() OVER (PARTITION BY playerId ORDER BY PlayLength ASC) AS rank
                 FROM Plays
-                WHERE mapId = '{@MapId}'
+                WHERE mapId = '{0}'
             )
             SELECT * 
             FROM RankedPlays
