@@ -158,8 +158,7 @@ app.MapGet("/player", async (HttpContext httpContext, PlayerContext db) =>
 
 })
 .WithName("GetPlayer")
-.WithOpenApi()
-.Produces<Player>();
+.WithOpenApi();
 
 app.MapPost("/play", async (string mapId, float timeLength, HttpContext httpContext, PlayerContext db) =>
 {
@@ -220,8 +219,7 @@ app.MapGet("/plays", async (HttpContext httpContext, PlayerContext db, string pl
 
 })
 .WithName("GetPlays")
-.WithOpenApi()
-.Produces<ICollection<Play>>();
+.WithOpenApi();
 
 app.MapGet("/map", async (string mapId, PlayerContext db) =>
 {
@@ -250,8 +248,7 @@ app.MapGet("/map", async (string mapId, PlayerContext db) =>
     }
 })
 .WithName("GetMap")
-.WithOpenApi()
-.Produces<Map>();
+.WithOpenApi();
 
 app.MapGet("/leaderboard", async (string mapId,int startIndex,int endIndex ,PlayerContext db) =>
 {
@@ -283,8 +280,7 @@ app.MapGet("/leaderboard", async (string mapId,int startIndex,int endIndex ,Play
     }
 })
 .WithName("GetLeaderboardByIndex")
-.WithOpenApi()
-.Produces<ICollection<Play>>();
+.WithOpenApi();
 
 app.MapGet("/maps", async (PlayerContext db) =>
 {
@@ -299,7 +295,6 @@ app.MapGet("/maps", async (PlayerContext db) =>
     }
 })
 .WithName("GetMaps")
-.WithOpenApi()
-.Produces<ICollection<Map>>();
+.WithOpenApi();
 
 app.Run();
