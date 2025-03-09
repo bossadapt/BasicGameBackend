@@ -40,8 +40,7 @@ using (var scope = app.Services.CreateScope())
     var db = scope.ServiceProvider.GetRequiredService<PlayerContext>();
     db.Database.Migrate();
 }
-//SET BASE API PATH
-app.UsePathBase("/api");
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
