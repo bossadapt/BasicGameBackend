@@ -137,7 +137,7 @@ app.MapGet("/player", async (HttpContext httpContext, PlayerContext db) =>
     }
     else
     {
-        return Results.Ok(playerResult);
+        return Results.Ok(new {playerResult.Id,playerResult.Username,playerResult.LastLoggedIn,playerResult.AccountCreated});
     }
 
 
@@ -184,7 +184,6 @@ app.MapGet("/plays", async (HttpContext httpContext, PlayerContext db, string pl
         {
             return Results.BadRequest();
         }
-        Console.WriteLine("playerId empty or null grabbing");
         playerResult = await Task.FromResult(db.Players.Where(player => player.Id == httpContext.User.Identity.GetUserId()).Select(player => player.Plays).FirstOrDefault());
     }
     else
