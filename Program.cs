@@ -60,11 +60,27 @@ if (app.Environment.IsDevelopment())
 //https://learn.microsoft.com/en-us/aspnet/core/security/authentication/cookie?view=aspnetcore-6.0
 app.UseHttpsRedirection();
 //basic auth
+const int usernameLengthLimit = 16;
+const int passwordLengthLimit = 1024;
 app.MapPost("/register", async (PlayerLogin loginAttempt, PlayerContext db) =>
 {
+    if (loginAttempt.Username.Length > usernameLengthLimit)
+    {
+        return Results.BadRequest("Username Max Characters is 16");
+    }
+    if (loginAttempt.Password.Length > passwordLengthLimit)
+    {
+        return Results.BadRequest("Too long of a password");
+    }
+
     if (string.IsNullOrWhiteSpace(loginAttempt.Username) || string.IsNullOrWhiteSpace(loginAttempt.Password))
     {
-        return Results.BadRequest();
+        return Results.BadRequest("Missing Username or Password");
+    }
+    var profanityChecker = new ProfanityChecker();
+    if (profanityChecker.ContainsProfanity(loginAttempt.Username))
+    {
+        return Results.BadRequest("Profanity in username");
     }
     var existingName = await Task.FromResult(db.Players.Where(player => player.Username == loginAttempt.Username).FirstOrDefault());
     if (existingName != null)
@@ -179,7 +195,7 @@ app.MapPost("/play", async (string mapId, float timeLength, HttpContext httpCont
     }
     else
     {
-        var newPlay = new Play(player.Id, mapId, timeLength);
+        var newPlay = new Play(player.Id, mapId, player.Username, timeLength);
         player.Plays.Add(newPlay);
         await db.SaveChangesAsync();
         return Results.Ok();
@@ -267,20 +283,24 @@ app.MapGet("/leaderboard", async (string mapId, int startIndex, int endIndex, Pl
     else
     {
         var sqlQuery = @"
-            WITH RankedPlays AS (
-                SELECT *,
-                    ROW_NUMBER() OVER (PARTITION BY playerId ORDER BY PlayLength ASC) AS rank
-                FROM Plays
-                WHERE mapId = '{0}'
-            )
-            SELECT *
-            FROM RankedPlays
-            WHERE rank = 1
-            ORDER BY PlayLength ASC
-            LIMIT {1} OFFSET {2};
+         WITH RankedPlays AS (
+            SELECT 
+                p.*, 
+                ROW_NUMBER() OVER (PARTITION BY p.PlayerId ORDER BY p.PlayLength ASC) AS rank
+            FROM Plays p
+            WHERE p.MapId = '{0}'
+        )
+        SELECT 
+            rp.*, 
+            pl.Username
+        FROM RankedPlays rp
+        JOIN Players pl ON rp.PlayerId = pl.Id
+        WHERE rp.rank = 1
+        ORDER BY rp.PlayLength ASC
+        LIMIT {1} OFFSET {2};
         ";
         var leaderboardRange = db.Plays.FromSqlRaw(string.Format(sqlQuery, map.Id, (endIndex - startIndex), startIndex)).AsNoTracking();
-        return Results.Ok(new { leaderboardRange });
+        return Results.Ok(leaderboardRange);
     }
 
 }).WithName("GetLeaderboardByIndex")

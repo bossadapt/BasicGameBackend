@@ -27,7 +27,7 @@ public class PlayerContext : DbContext
             bTime:50
             ),
               new Map("movement_v2",
-            authorTime:24.9,
+            authorTime:24.7,
             sPlusTime:25.5,
             sTime:27,
             aTime:30,

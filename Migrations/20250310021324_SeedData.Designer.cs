@@ -10,7 +10,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BasicGameBackend.Migrations
 {
     [DbContext(typeof(PlayerContext))]
-    [Migration("20250309013739_SeedData")]
+    [Migration("20250310021324_SeedData")]
     partial class SeedData
     {
         /// <inheritdoc />
@@ -57,7 +57,7 @@ namespace BasicGameBackend.Migrations
                         {
                             Id = "movement_v2",
                             ATime = 30.0,
-                            AuthorTime = 24.899999999999999,
+                            AuthorTime = 24.699999999999999,
                             BTime = 38.0,
                             SPlusTime = 25.5,
                             STime = 27.0
@@ -77,6 +77,10 @@ namespace BasicGameBackend.Migrations
                         .HasColumnType("REAL");
 
                     b.Property<string>("PlayerId")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("PlayerUserName")
                         .IsRequired()
                         .HasColumnType("TEXT");
 

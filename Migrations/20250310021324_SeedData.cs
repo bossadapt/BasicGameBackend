@@ -50,6 +50,7 @@ namespace BasicGameBackend.Migrations
                 {
                     Id = table.Column<string>(type: "TEXT", nullable: false),
                     PlayerId = table.Column<string>(type: "TEXT", nullable: false),
+                    PlayerUserName = table.Column<string>(type: "TEXT", nullable: false),
                     MapId = table.Column<string>(type: "TEXT", nullable: false),
                     PlayLength = table.Column<double>(type: "REAL", nullable: false),
                     TimeSubmitted = table.Column<DateTime>(type: "TEXT", nullable: false)
@@ -76,7 +77,7 @@ namespace BasicGameBackend.Migrations
                 columns: new[] { "Id", "ATime", "AuthorTime", "BTime", "SPlusTime", "STime" },
                 values: new object[,]
                 {
-                    { "movement_v2", 30.0, 24.899999999999999, 38.0, 25.5, 27.0 },
+                    { "movement_v2", 30.0, 24.699999999999999, 38.0, 25.5, 27.0 },
                     { "pk_pylons", 40.0, 31.75, 50.0, 32.100000000000001, 33.5 }
                 });
 
