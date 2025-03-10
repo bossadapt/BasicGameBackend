@@ -198,13 +198,13 @@ app.MapPost("/play", async (string mapId, float timeLength, HttpContext httpCont
         var newPlay = new Play(player.Id, mapId, player.Username, timeLength);
         player.Plays.Add(newPlay);
         await db.SaveChangesAsync();
-        return Results.Ok();
+        return Results.Ok(newPlay);
     }
 
 
 })
 .WithName("addPlay")
-.WithOpenApi();
+.WithOpenApi().Produces<Play>();
 
 
 app.MapGet("/plays", async (HttpContext httpContext, PlayerContext db, string playerId = null) =>
